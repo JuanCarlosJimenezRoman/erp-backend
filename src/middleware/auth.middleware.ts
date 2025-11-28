@@ -20,7 +20,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
   }
 
   try {
-    // Verificar si la sesión existe y es válida
+    // Verificar si la sesión existe
     const session = await prisma.session.findFirst({
       where: { 
         token,

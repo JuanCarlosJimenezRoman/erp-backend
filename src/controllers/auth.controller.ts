@@ -18,15 +18,26 @@ export const login = async (req: Request, res: Response) => {
       include: { role: true }
     });
 
+    
+
     if (!user || !user.isActive) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
+console.log('Usuario encontrado:', {
+  email: user.email,
+  role: user.role.name,
+  permissions: user.role.permissions,
+  typeOfPermissions: typeof user.role.permissions
+});
     // Verificar contraseña
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
+
+    // Los permisos ya vienen como array (tipo Json)
+    const permissions = user.role.permissions as string[];
 
     // Crear token
     const token = jwt.sign(
@@ -34,7 +45,7 @@ export const login = async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         role: user.role.name,
-        permissions: JSON.parse(user.role.permissions)
+        permissions: permissions
       },
       process.env.JWT_SECRET!,
       { expiresIn: '24h' }
@@ -45,7 +56,7 @@ export const login = async (req: Request, res: Response) => {
       data: {
         userId: user.id,
         token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 horas
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       }
     });
 
@@ -57,7 +68,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         name: user.name,
         role: user.role.name,
-        permissions: JSON.parse(user.role.permissions)
+        permissions: permissions
       }
     });
   } catch (error) {
@@ -83,7 +94,7 @@ export const register = async (req: Request, res: Response) => {
     // Hash de la contraseña
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Crear usuario (por defecto rol de usuario)
+    // Crear usuario
     const user = await prisma.user.create({
       data: {
         email,
@@ -139,7 +150,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
         email: user.email,
         name: user.name,
         role: user.role.name,
-        permissions: JSON.parse(user.role.permissions),
+        permissions: user.role.permissions as string[], // Cast a string[]
         isActive: user.isActive,
         createdAt: user.createdAt
       }

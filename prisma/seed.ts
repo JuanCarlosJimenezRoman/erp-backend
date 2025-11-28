@@ -4,28 +4,33 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Crear roles iniciales
-  await prisma.role.createMany({
+  // Primero limpiar la base de datos
+  await prisma.session.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.role.deleteMany();
+
+  // Crear roles iniciales - SIN JSON.stringify porque es tipo Json
+  const roles = await prisma.role.createMany({
     data: [
       {
         name: 'admin',
         description: 'Administrador del sistema',
-        permissions: ['*']
+        permissions: ['*'] // Array directo, no stringify
       },
       {
         name: 'usuario',
         description: 'Usuario básico',
-        permissions: ['dashboard:read', 'profile:read']
+        permissions: ['dashboard:read', 'profile:read', 'profile:write'] // Array directo
       },
       {
         name: 'contabilidad',
         description: 'Departamento de contabilidad',
-        permissions: ['dashboard:read', 'contabilidad:read', 'contabilidad:write']
+        permissions: ['dashboard:read', 'contabilidad:read', 'contabilidad:write', 'reportes:read'] // Array directo
       },
       {
         name: 'almacen',
         description: 'Departamento de almacén',
-        permissions: ['dashboard:read', 'almacen:read', 'almacen:write']
+        permissions: ['dashboard:read', 'almacen:read', 'almacen:write', 'inventario:read', 'inventario:write'] // Array directo
       }
     ],
     skipDuplicates: true
@@ -33,26 +38,31 @@ async function main() {
 
   // Crear usuario administrador
   const hashedPassword = await bcrypt.hash('admin123', 12);
+  
+  const adminRole = await prisma.role.findFirst({
+    where: { name: 'admin' }
+  });
 
-  await prisma.user.upsert({
-    where: { email: 'admin@erp.com' },
-    update: {},
-    create: {
+  if (!adminRole) {
+    throw new Error('Rol admin no encontrado');
+  }
+
+  await prisma.user.create({
+    data: {
       email: 'admin@erp.com',
       password: hashedPassword,
-      name: 'Administrador',
-      role: {
-        connect: { name: 'admin' }
-      }
+      name: 'Administrador Principal',
+      roleId: adminRole.id
     }
   });
 
-  console.log('✅ Base de datos inicializada');
+  console.log('✅ Base de datos inicializada correctamente');
+  console.log('👤 Usuario admin: admin@erp.com / admin123');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('❌ Error en seed:', e);
     process.exit(1);
   })
   .finally(async () => {
