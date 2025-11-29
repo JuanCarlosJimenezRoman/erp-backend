@@ -4,10 +4,13 @@ import { prisma } from '../services/database.service';
 export const getRoles = async (req: Request, res: Response) => {
   try {
     const { includeAdmin } = req.query;
+
+    console.log('Solicitando roles, includeAdmin:', includeAdmin); // Debug
+
     
     const where: any = {};
     
-    if (!includeAdmin || includeAdmin === 'false') {
+    if (includeAdmin === 'false') {
       where.name = { not: 'admin' };
     }
 
