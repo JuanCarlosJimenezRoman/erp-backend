@@ -15,17 +15,17 @@ async function main() {
       {
         name: 'admin',
         description: 'Administrador del sistema',
-        permissions: ['*'] // Array directo, no stringify
+        permissions: ['*', 'users:read', 'users:write', 'users:delete'] // Array directo, no stringify
       },
       {
         name: 'usuario',
         description: 'Usuario básico',
-        permissions: ['dashboard:read', 'profile:read', 'profile:write'] // Array directo
+        permissions: ['dashboard:read', 'profile:read', 'profile:write'] // usuario
       },
       {
         name: 'contabilidad',
         description: 'Departamento de contabilidad',
-        permissions: ['dashboard:read', 'contabilidad:read', 'contabilidad:write', 'reportes:read'] // Array directo
+        permissions: ['dashboard:read', 'contabilidad:read', 'contabilidad:write', 'reportes:read', 'users:read'] // contabilidad
       },
       {
         name: 'almacen',
