@@ -3,10 +3,16 @@ import { prisma } from '../services/database.service';
 
 export const getRoles = async (req: Request, res: Response) => {
   try {
+    const { includeAdmin } = req.query;
+    
+    const where: any = {};
+    
+    if (!includeAdmin || includeAdmin === 'false') {
+      where.name = { not: 'admin' };
+    }
+
     const roles = await prisma.role.findMany({
-      where: {
-        name: { not: 'admin' } // No mostrar rol admin por defecto
-      },
+      where,
       orderBy: { name: 'asc' }
     });
 
@@ -16,7 +22,6 @@ export const getRoles = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
-
 export const getRoleById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

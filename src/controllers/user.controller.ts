@@ -10,9 +10,9 @@ export const getUsers = async (req: Request, res: Response) => {
     const skip = (Number(page) - 1) * Number(limit);
     
     // Construir where clause para búsqueda
-    const where: any = {
-      isActive: true
-    };
+    const where: any = {};
+
+    
 
     if (search) {
       where.OR = [
@@ -180,11 +180,29 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
     // Verificar que el usuario existe
     const existingUser = await prisma.user.findUnique({
-      where: { id }
+      where: { id },
+      include: { role: true }
     });
 
     if (!existingUser) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // PREVENIR CAMBIOS CRÍTICOS AL USUARIO ADMIN PRINCIPAL
+    if (existingUser.email === 'admin@erp.com') {
+      // No permitir cambiar el rol del admin principal
+      if (roleId && roleId !== existingUser.roleId) {
+        return res.status(400).json({ 
+          message: 'No se puede cambiar el rol del administrador principal' 
+        });
+      }
+      
+      // No permitir desactivar al admin principal
+      if (typeof isActive === 'boolean' && !isActive) {
+        return res.status(400).json({ 
+          message: 'No se puede desactivar al administrador principal' 
+        });
+      }
     }
 
     // Verificar email único si se está cambiando
@@ -204,6 +222,13 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
       });
       if (!role) {
         return res.status(400).json({ message: 'Rol no válido' });
+      }
+
+      // PREVENIR QUE ADMINISTRADORES SE QUITEN SUS PROPIOS PRIVILEGIOS
+      if (req.user?.id === id && role.name !== 'admin') {
+        return res.status(400).json({ 
+          message: 'No puedes quitarte tus propios privilegios de administrador' 
+        });
       }
     }
 
@@ -255,9 +280,26 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const authReq = req as AuthRequest;
+
+    // Verificar que el usuario existe
+    const userToDelete = await prisma.user.findUnique({
+      where: { id },
+      include: { role: true }
+    });
+
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // PREVENIR DESACTIVACIÓN DEL ADMIN PRINCIPAL
+    if (userToDelete.email === 'admin@erp.com') {
+      return res.status(400).json({ 
+        message: 'No se puede desactivar al administrador principal' 
+      });
+    }
 
     // Verificar que no sea el propio usuario
-    const authReq = req as AuthRequest;
     if (authReq.user?.id === id) {
       return res.status(400).json({ 
         message: 'No puedes desactivar tu propio usuario' 
