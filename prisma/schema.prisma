@@ -58,3 +58,85 @@ model Permission {
 
   @@map("permissions")
 }
+
+//modulo de Contabilidad
+model Account {
+  id String @id @default(uuid())
+  code String @unique
+  name String
+  type AccountType
+  description String?
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@map("accounts")
+}
+
+model Transaction {
+  id String @id @default(uuid())
+  date DateTime
+  description String
+  amount Decimal
+  type TransactionType
+  accountId String
+  invoiceId String?
+  reference String?
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@map("transactions")
+}
+
+model Invoice {
+  id String @id @default(uuid())
+  number String @unique
+  type InvoiceType
+  date DateTime
+  dueDate DateTime?
+  clientName String
+  clientEmail String?
+  clientTaxId String? 
+  subtotal Decimal
+  tax Decimal
+  total Decimal
+  status InvoiceStatus
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+
+  @@map("invoices")
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+enum InvoiceType {
+  INCOME
+  EXPENSE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
+}
