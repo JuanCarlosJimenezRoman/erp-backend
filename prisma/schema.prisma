@@ -141,14 +141,14 @@ enum InvoiceStatus {
   CANCELLED
 }
 
-//Modulos de Almacen/Inventario
+// Módulo de Almacén/Inventario
 model Category {
-  id String @id @default(uuid())
-  name String @unique
+  id          String   @id @default(uuid())
+  name        String   @unique
   description String?
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   products Product[]
 
@@ -156,15 +156,15 @@ model Category {
 }
 
 model Supplier {
-  id String @id @default(uuid())
-  name String
-  email String?
-  phone String?
-  address String?
-  taxId String?
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  taxId       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   products Product[]
 
@@ -172,60 +172,62 @@ model Supplier {
 }
 
 model Product {
-  id String @id @default(uuid())
-  sku String @unique
-  name String
+  id          String   @id @default(uuid())
+  sku         String   @unique
+  name        String
   description String?
-  price Decimal
-  cost Decimal
-  categoryId String
-  supplierId String
-  minStock Int @default(0)
-  maxStock Int?
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  price       Decimal
+  cost        Decimal
+  categoryId  String
+  supplierId  String?
+  minStock    Int      @default(0)
+  maxStock    Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  movements Movement[]
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  movements   Movement[]
+  //Relación con alertas de inventario 👀
+  inventoryAlerts InventoryAlert[]
 
   @@map("products")
 }
 
 model Movement {
-  id String @id @default(uuid())
-  type MovementType
-  quantity Int
-  reason String?
-  reference String?
-  productId String
-  createdBy String
-  createdAt DateTime @default(now())
+  id          String      @id @default(uuid())
+  type        MovementType
+  quantity    Int
+  reason      String
+  reference   String?
+  productId   String
+  createdBy   String
+  createdAt   DateTime    @default(now())
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("movements")
 }
 
 model InventoryAlert {
-  id String @id @default(uuid())
-  productId String
-  type AlertType
-  message String
-  isResolved Boolean @default(false)
-  createdAt DateTime @default(now())
-  resolvedAt DateTime?
+  id          String   @id @default(uuid())
+  productId   String
+  type        AlertType
+  message     String
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("inventory_alerts")
 }
 
 enum MovementType {
- IN
- OUT
- ADJUSTMENT
+  IN
+  OUT
+  ADJUSTMENT
 }
 
 enum AlertType {

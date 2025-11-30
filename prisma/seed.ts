@@ -97,6 +97,116 @@ await prisma.account.createMany({
   skipDuplicates: true
 });
 
+// Crear categorías de inventario
+await prisma.category.createMany({
+  data: [
+    { name: 'Electrónicos', description: 'Dispositivos electrónicos y gadgets' },
+    { name: 'Ropa', description: 'Prendas de vestir y accesorios' },
+    { name: 'Hogar', description: 'Artículos para el hogar' },
+    { name: 'Deportes', description: 'Equipamiento deportivo' },
+    { name: 'Libros', description: 'Libros y material de lectura' }
+  ],
+  skipDuplicates: true
+});
+
+// Crear proveedores
+await prisma.supplier.createMany({
+  data: [
+    { 
+      name: 'TecnoImport S.A.', 
+      email: 'ventas@tecnoimport.com',
+      phone: '+1234567890',
+      address: 'Av. Tecnológica 123, Ciudad',
+      taxId: '12345678901'
+    },
+    { 
+      name: 'ModaStyle Ltda.', 
+      email: 'contacto@modastyle.com',
+      phone: '+0987654321',
+      address: 'Calle Moda 456, Ciudad',
+      taxId: '98765432109'
+    },
+    { 
+      name: 'HogarConfort S.A.', 
+      email: 'info@hogarconfort.com',
+      phone: '+1122334455',
+      address: 'Plaza Hogar 789, Ciudad'
+    }
+  ],
+  skipDuplicates: true
+});
+
+// Crear algunos productos de ejemplo
+const electronicsCategory = await prisma.category.findFirst({ where: { name: 'Electrónicos' } });
+const clothingCategory = await prisma.category.findFirst({ where: { name: 'Ropa' } });
+const homeCategory = await prisma.category.findFirst({ where: { name: 'Hogar' } });
+
+const tecnoSupplier = await prisma.supplier.findFirst({ where: { name: 'TecnoImport S.A.' } });
+const modaSupplier = await prisma.supplier.findFirst({ where: { name: 'ModaStyle Ltda.' } });
+
+if (electronicsCategory && tecnoSupplier) {
+  await prisma.product.create({
+    data: {
+      sku: 'SMARTPHONE-001',
+      name: 'Smartphone Android',
+      description: 'Smartphone Android de última generación',
+      price: 299.99,
+      cost: 199.99,
+      categoryId: electronicsCategory.id,
+      supplierId: tecnoSupplier.id,
+      minStock: 5,
+      maxStock: 50
+    }
+  });
+
+  await prisma.product.create({
+    data: {
+      sku: 'LAPTOP-001',
+      name: 'Laptop Business',
+      description: 'Laptop para negocios',
+      price: 899.99,
+      cost: 649.99,
+      categoryId: electronicsCategory.id,
+      supplierId: tecnoSupplier.id,
+      minStock: 3,
+      maxStock: 20
+    }
+  });
+}
+
+if (clothingCategory && modaSupplier) {
+  await prisma.product.create({
+    data: {
+      sku: 'TSHIRT-001',
+      name: 'Camiseta Básica',
+      description: 'Camiseta de algodón 100%',
+      price: 19.99,
+      cost: 9.99,
+      categoryId: clothingCategory.id,
+      supplierId: modaSupplier.id,
+      minStock: 10,
+      maxStock: 100
+    }
+  });
+}
+
+if (homeCategory) {
+  await prisma.product.create({
+    data: {
+      sku: 'COFFEE-001',
+      name: 'Cafetera Programable',
+      description: 'Cafetera automática con programador',
+      price: 79.99,
+      cost: 49.99,
+      categoryId: homeCategory.id,
+      minStock: 2,
+      maxStock: 25
+    }
+  });
+}
+
+console.log('📦 Datos de inventario creados');
+
 
   console.log('✅ Base de datos inicializada correctamente');
   console.log('👤 Usuario admin: admin@erp.com / admin123');

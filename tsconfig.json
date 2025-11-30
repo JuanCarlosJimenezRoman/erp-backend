@@ -11,6 +11,6 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../frontend/src/services/inventory.service.ts"],
   "exclude": ["node_modules", "dist"]
 }
