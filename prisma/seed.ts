@@ -8,6 +8,10 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
   await prisma.role.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.supplier.deleteMany();
+  await prisma.account.deleteMany();
 
   // Crear roles iniciales - SIN JSON.stringify porque es tipo Json
   const roles = await prisma.role.createMany({
@@ -17,6 +21,7 @@ async function main() {
         description: 'Administrador del sistema',
         permissions: ['*', 'users:read', 'users:write', 'users:delete'] // Array directo, no stringify
       },
+
       {
         name: 'usuario',
         description: 'Usuario básico',
@@ -64,6 +69,26 @@ async function main() {
       password: hashedPassword,
       name: 'Administrador Principal',
       roleId: adminRole.id
+    }
+  });
+
+  // Crear usuario de almacen
+  const hashedPasswordAlmacen = await bcrypt.hash('almacen123', 12);
+
+  const almacenRole = await prisma.role.findFirst({
+    where: { name: 'almacen' }
+  });
+  
+  if (!almacenRole) {
+    throw new Error('Rol almacen no encontrado');
+  }
+  
+  await prisma.user.create({
+    data: {
+      email: 'almacen@erp.com',
+      password: hashedPasswordAlmacen,
+      name: 'Encargado de Almacen',
+      roleId: almacenRole.id,
     }
   });
 

@@ -114,8 +114,16 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
 
 export const getCategories = async (req: Request, res: Response) => {
   try {
+    const { includeInactive } = req.query;
+
+    const where: any = {};
+
+    if (includeInactive !== 'true') {
+      where.isActive = true;
+    }
+
     const categories = await prisma.category.findMany({
-      where: { isActive: true },
+      where,
       include: {
         _count: {
           select: {
@@ -264,11 +272,25 @@ export const updateCategory = async (req: Request, res: Response) => {
 
 export const getSuppliers = async (req: Request, res: Response) => {
   try {
+    // 1. Recuperamos el query param 'includeInactive'
+    const { includeInactive } = req.query;
+
+    // 2. Construimos el objeto 'where' dinámicamente
+    const where: any = {};
+    
+    // Si NO se pide incluir inactivos (o es undefined/false), filtramos solo los activos.
+    // Si includeInactive === 'true', el objeto 'where' queda vacío y trae todo.
+    if (includeInactive !== 'true') {
+      where.isActive = true;
+    }
+
     const suppliers = await prisma.supplier.findMany({
-      where: { isActive: true },
+      where, // <--- Usamos el filtro dinámico
       include: {
         _count: {
           select: {
+            // Nota: Usualmente queremos contar solo los productos ACTIVOS 
+            // aunque el proveedor esté inactivo, para saber qué stock real hay.
             products: {
               where: { isActive: true }
             }
@@ -401,11 +423,15 @@ export const updateSupplier = async (req: Request, res: Response) => {
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, categoryId, supplierId } = req.query;
+    const { page = 1, limit = 20, categoryId, supplierId, includeInactive } = req.query;
     
     const skip = (Number(page) - 1) * Number(limit);
     
-    const where: any = { isActive: true };
+    const where: any = {};
+    // Solo filtrar por activos si no se solicita incluir inactivos
+    if (includeInactive !== 'true') {
+      where.isActive = true;
+    }
     if (categoryId) where.categoryId = categoryId;
     if (supplierId) where.supplierId = supplierId;
 
@@ -457,6 +483,8 @@ export const getProducts = async (req: Request, res: Response) => {
         pages: Math.ceil(total / Number(limit))
       }
     });
+    
+    
   } catch (error) {
     console.error('Error obteniendo productos:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
